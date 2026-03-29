@@ -42,6 +42,17 @@
       background: #d93020;
       flex-shrink: 0;
     }
+    .sec-label .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.9); }
+    }
     .events-card {
       background: #fff;
       border-radius: 18px;
@@ -140,7 +151,7 @@
       font-size: 18px;
       font-weight: 800;
     }
-    .result-badge {
+    .status-badge {
       position: absolute;
       bottom: -4px;
       right: -4px;
@@ -151,9 +162,12 @@
       color: #fff;
       border: 2px solid #fff;
     }
-    .result-win { background: linear-gradient(135deg, #22c55e, #16a34a); }
-    .result-loss { background: linear-gradient(135deg, #ef4444, #dc2626); }
-    .result-draw { background: linear-gradient(135deg, #eab308, #ca8a04); }
+    .status-live {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+    .status-upcoming {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
     .loading-text {
       color: #9a2010;
       font-size: 12px;
@@ -182,11 +196,11 @@
       .opponent-avatar-link:focus { outline-color: #e8553a; }
       .event-name { color: #ff8a80; }
       .opponent-label { color: #ffab91; }
-      .result-badge { border-color: #2d2d2d; }
+      .status-badge { border-color: #2d2d2d; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .event-box, .opponent-avatar, .opponent-avatar-link { transition: none; }
+      .event-box, .opponent-avatar, .opponent-avatar-link, .live-dot { transition: none; animation: none; }
     }
 
     @media (max-width: 320px) {
@@ -231,6 +245,13 @@
         return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
       }
 
+      function formatDate(timestamp) {
+        const date = new Date(timestamp * 1000);
+        const month = date.toLocaleString('en-US', { month: 'short' });
+        const day = date.getDate();
+        return { month, day };
+      }
+
       async function fetchClubIcon(clubUrl) {
         const slug = clubUrl.split('/').pop();
         if (clubCache[slug]) return clubCache[slug];
@@ -257,16 +278,21 @@
           if (!r.ok) throw new Error('Failed to load');
           const d = await r.json();
 
-          const finished = (d.finished || []);
+          const inProgress = d.in_progress || [];
+          const registered = d.registered || [];
 
-          if (finished.length === 0) {
-            eventList.innerHTML = '<div class="empty-text">No recent events</div>';
+          const currentEvents = [...inProgress, ...registered];
+
+          if (currentEvents.length === 0) {
+            eventList.innerHTML = '<div class="empty-text">No current events</div>';
             return;
           }
 
+          currentEvents.sort((a, b) => a.start_time - b.start_time);
+
           eventList.innerHTML = '';
 
-          const matchesToShow = finished.slice(0, maxEvents);
+          const matchesToShow = currentEvents.slice(0, maxEvents);
 
           for (const m of matchesToShow) {
             const matchId = m['@id'].split('/').pop();
@@ -274,19 +300,9 @@
             const clubData = await fetchClubIcon(m.opponent);
             const opponentName = clubData.name;
             const opponentIcon = clubData.icon;
-            const opponentUrl = clubData.url;
 
-            const result = (m.result || 'draw').toLowerCase();
-            let resultClass = 'result-draw';
-            let resultText = 'DRAW';
-
-            if (result === 'win') {
-              resultClass = 'result-win';
-              resultText = 'WIN';
-            } else if (result === 'loss') {
-              resultClass = 'result-loss';
-              resultText = 'LOSS';
-            }
+            const isLive = inProgress.some(ip => ip['@id'] === m['@id']);
+            const { month, day } = formatDate(m.start_time);
 
             const avatarHtml = opponentIcon
               ? `<img class="opponent-avatar" src="${opponentIcon}" alt="${opponentName} club avatar" loading="lazy">`
@@ -298,11 +314,12 @@
                   <span class="event-name">${m.name || 'Club Match'}</span>
                   <span class="opponent-label">
                     <span>vs ${opponentName}</span>
+                    <span>• ${month} ${day}</span>
                   </span>
                 </div>
                 <span class="opponent-avatar-link" aria-hidden="true">
                   ${avatarHtml}
-                  <span class="result-badge ${resultClass}">${resultText}</span>
+                  <span class="status-badge ${isLive ? 'status-live' : 'status-upcoming'}">${isLive ? 'LIVE' : 'UPCOMING'}</span>
                 </span>
               </a>
             `;
