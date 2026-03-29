@@ -57,14 +57,6 @@
       from { opacity: 0; transform: translateY(-10px); }
       to { opacity: 1; transform: translateY(0); }
     }
-    @keyframes fadeOut {
-      from { opacity: 1; transform: scale(1); }
-      to { opacity: 0.5; transform: scale(0.95); }
-    }
-    @keyframes newEvent {
-      0% { background: rgba(34, 197, 94, 0.3); }
-      100% { background: #fff8f5; }
-    }
     .events-card {
       background: #fff;
       border-radius: 18px;
@@ -92,9 +84,6 @@
       border-color: #d93020;
       transform: translateY(-2px);
       box-shadow: 0 5px 0 #d93020;
-    }
-    .event-box.finished-anim {
-      animation: fadeOut 0.5s ease-out forwards, newEvent 1s ease-out;
     }
     .event-box.just-finished {
       border-color: #6b7280;
@@ -257,7 +246,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .event-box, .club-avatar, .live-dot, .event-box.finished-anim, .event-box.just-finished { transition: none; animation: none; }
+      .event-box, .club-avatar, .live-dot { transition: none; animation: none; }
     }
 
     @media (max-width: 340px) {
@@ -296,7 +285,6 @@
 
       let previousEventIds = new Set();
       let previousInProgressIds = new Set();
-      let finishedEventIds = new Set();
 
       function capitalizeName(str) {
         if (!str) return "";
@@ -348,21 +336,18 @@
       }
 
       function detectEventChanges(currentEvents, currentInProgress) {
-        const changes = { newlyFinished: [], newEvents: [], removedEvents: [] };
+        const changes = { newlyFinished: [], newEvents: [] };
         const currentInProgressIds = new Set(currentInProgress.map(e => e['@id']));
-
         currentInProgress.forEach(e => {
           if (!previousInProgressIds.has(e['@id']) && !previousEventIds.has(e['@id'])) {
             changes.newEvents.push(e);
           }
         });
-
         previousInProgressIds.forEach(id => {
           if (!currentInProgressIds.has(id)) {
             changes.newlyFinished.push(id);
           }
         });
-
         return changes;
       }
 
@@ -372,6 +357,10 @@
           if (!r.ok) throw new Error('Failed to load');
           const d = await r.json();
 
+          const ourClubData = await fetchClubData('https://api.chess.com/pub/club/' + clubSlug);
+          const ourClubIcon = ourClubData.icon;
+          const ourClubUrl = ourClubData.url;
+
           const inProgress = d.in_progress || [];
           const registered = d.registered || [];
           const finished = d.finished || [];
@@ -379,7 +368,7 @@
 
           if (allEvents.length === 0) {
             eventList.innerHTML = '<div class="empty-text">No events found</div>';
-            lastUpdatedEl.textContent = 'Last updated: ' + formatTime(new Date());
+            lastUpdatedEl.textContent = 'Updated: ' + formatTime(new Date());
             return;
           }
 
@@ -429,7 +418,11 @@
               else isDraw = true;
             }
 
-            const avatarHtml = opponentIcon
+            const ourAvatarHtml = ourClubIcon
+              ? `<img src="${ourClubIcon}" alt="${clubName} avatar" loading="lazy">`
+              : `<div class="avatar-placeholder">${getInitials(clubName)}</div>`;
+
+            const opponentAvatarHtml = opponentIcon
               ? `<img src="${opponentIcon}" alt="${opponentName} avatar" loading="lazy">`
               : `<div class="avatar-placeholder">${getInitials(opponentName)}</div>`;
 
@@ -456,8 +449,8 @@
                 </div>
                 <div class="event-main">
                   <div class="club-section">
-                    <a href="https://www.chess.com/club/${clubSlug}" target="_blank" rel="noopener noreferrer" class="club-avatar" aria-label="Visit ${clubName} club page" onclick="event.stopPropagation()">
-                      <div class="avatar-placeholder">${getInitials(clubName)}</div>
+                    <a href="${ourClubUrl}" target="_blank" rel="noopener noreferrer" class="club-avatar" aria-label="Visit ${clubName} club page" onclick="event.stopPropagation()">
+                      ${ourAvatarHtml}
                     </a>
                     <span class="club-name you">${clubName}</span>
                   </div>
@@ -472,7 +465,7 @@
                   </div>
                   <div class="club-section">
                     <a href="${opponentUrl}" target="_blank" rel="noopener noreferrer" class="club-avatar" aria-label="Visit ${opponentName} club page" onclick="event.stopPropagation()">
-                      ${avatarHtml}
+                      ${opponentAvatarHtml}
                     </a>
                     <span class="club-name">${opponentName}</span>
                   </div>
@@ -495,7 +488,6 @@
 
           previousEventIds = new Set(allEvents.map(e => e['@id']));
           previousInProgressIds = new Set(inProgress.map(e => e['@id']));
-          finished.forEach(f => finishedEventIds.add(f['@id']));
           lastUpdatedEl.textContent = 'Updated: ' + formatTime(new Date());
 
         } catch (e) {
