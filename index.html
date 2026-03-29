@@ -69,73 +69,91 @@
       transform: translateY(-2px);
       box-shadow: 0 5px 0 #d93020;
     }
-    .date-badge {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      margin-right: 12px;
-      background: linear-gradient(135deg, #d93020, #e85535);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
+    .event-box:hover .opponent-avatar {
+      transform: scale(1.08);
+      border-color: #d93020;
     }
-    .date-month {
-      font-size: 9px;
-      color: rgba(255,255,255,0.85);
-      font-weight: 800;
-      text-transform: uppercase;
-      line-height: 1;
+    .event-box:hover .event-name {
+      color: #d93020;
     }
-    .date-day {
-      font-size: 16px;
-      color: #fff;
-      font-weight: 800;
-      line-height: 1.1;
-    }
-    .info-container {
+    .event-info {
       display: flex;
       flex-direction: column;
       overflow: hidden;
       flex: 1;
+      min-width: 0;
     }
-    .club-name {
+    .event-name {
       color: #c73520;
       font-weight: 800;
-      font-size: 12px;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      transition: color 0.15s ease;
+    }
+    .opponent-label {
+      color: #9a2010;
+      font-size: 10px;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .opponent-label span {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .opponent-name {
-      color: #9a2010;
-      font-size: 11px;
-      margin-top: 2px;
-      white-space: nowrap;
+    .opponent-avatar-link {
+      display: block;
+      margin-left: auto;
+      flex-shrink: 0;
+      border-radius: 50%;
       overflow: hidden;
-      text-overflow: ellipsis;
+      width: 48px;
+      height: 48px;
+      border: 2px solid #f5c5b8;
+      transition: all 0.15s ease;
+      background: #f5c5b8;
+      position: relative;
+    }
+    .opponent-avatar-link:focus {
+      outline: 2px solid #d93020;
+      outline-offset: 2px;
+    }
+    .opponent-avatar {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.15s ease;
+    }
+    .avatar-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #d93020, #e85535);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 800;
     }
     .result-badge {
-      margin-left: auto;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 10px;
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 8px;
       font-weight: 800;
-      flex-shrink: 0;
-    }
-    .result-win {
-      background: linear-gradient(135deg, #22c55e, #16a34a);
       color: #fff;
+      border: 2px solid #fff;
     }
-    .result-loss {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: #fff;
-    }
-    .result-draw {
-      background: linear-gradient(135deg, #eab308, #ca8a04);
-      color: #fff;
-    }
+    .result-win { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .result-loss { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .result-draw { background: linear-gradient(135deg, #eab308, #ca8a04); }
     .loading-text {
       color: #9a2010;
       font-size: 12px;
@@ -157,13 +175,24 @@
       .events-card { background: #2d2d2d; border-color: #4a4a4a; }
       .sec-label { color: #ff8a80; }
       .event-box { background: #2d2d2d; border-color: #4a4a4a; }
-      .event-box:hover { background: #3d3d3d; border-color: #e8553a; }
-      .club-name { color: #ff8a80; }
-      .opponent-name { color: #ffab91; }
+      .event-box:hover { background: #3d3d3d; border-color: #e8553a; box-shadow: 0 5px 0 #e8553a; }
+      .event-box:hover .opponent-avatar { border-color: #e8553a; }
+      .event-box:hover .event-name { color: #e8553a; }
+      .opponent-avatar-link { border-color: #4a4a4a; background: #4a4a4a; }
+      .opponent-avatar-link:focus { outline-color: #e8553a; }
+      .event-name { color: #ff8a80; }
+      .opponent-label { color: #ffab91; }
+      .result-badge { border-color: #2d2d2d; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .event-box { transition: none; }
+      .event-box, .opponent-avatar, .opponent-avatar-link { transition: none; }
+    }
+
+    @media (max-width: 320px) {
+      .event-box { padding: 8px 10px; }
+      .event-name { font-size: 12px; }
+      .opponent-avatar-link { width: 40px; height: 40px; }
     }
   </style>
 </head>
@@ -188,13 +217,7 @@
       const maxEvents = 3;
 
       const eventList = document.getElementById('eventList');
-
-      function formatDate(timestamp) {
-        const date = new Date(timestamp * 1000);
-        const month = date.toLocaleString('en-US', { month: 'short' });
-        const day = date.getDate();
-        return { month, day };
-      }
+      const clubCache = {};
 
       function capitalizeName(str) {
         if (!str) return "";
@@ -204,13 +227,37 @@
                   .join(' ');
       }
 
+      function getInitials(name) {
+        return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      }
+
+      async function fetchClubIcon(clubUrl) {
+        const slug = clubUrl.split('/').pop();
+        if (clubCache[slug]) return clubCache[slug];
+
+        try {
+          const r = await fetch(clubUrl);
+          if (!r.ok) throw new Error('Failed to fetch club');
+          const data = await r.json();
+          clubCache[slug] = {
+            name: data.name,
+            icon: data.icon || null,
+            url: data.url
+          };
+          return clubCache[slug];
+        } catch (e) {
+          console.error(e);
+          return { name: capitalizeName(slug), icon: null, url: clubUrl };
+        }
+      }
+
       async function loadMatches() {
         try {
           const r = await fetch('https://api.chess.com/pub/club/' + clubSlug + '/matches');
           if (!r.ok) throw new Error('Failed to load');
           const d = await r.json();
 
-          const finished = (d.finished || []).filter(m => m.end_time);
+          const finished = (d.finished || []);
 
           if (finished.length === 0) {
             eventList.innerHTML = '<div class="empty-text">No recent events</div>';
@@ -219,42 +266,47 @@
 
           eventList.innerHTML = '';
 
-          finished.sort((a, b) => b.end_time - a.end_time)
-                  .slice(0, maxEvents)
-                  .forEach(m => {
-                    const { month, day } = formatDate(m.end_time);
-                    const matchId = m['@id'].split('/').pop();
-                    const webUrl = 'https://www.chess.com/club/matches/' + matchId;
-                    const slug = m.opponent.split('/').pop();
-                    const opponent = capitalizeName(slug);
+          const matchesToShow = finished.slice(0, maxEvents);
 
-                    let resultClass = 'result-draw';
-                    let resultText = 'DRAW';
+          for (const m of matchesToShow) {
+            const matchId = m['@id'].split('/').pop();
+            const webUrl = 'https://www.chess.com/club/matches/' + matchId;
+            const clubData = await fetchClubIcon(m.opponent);
+            const opponentName = clubData.name;
+            const opponentIcon = clubData.icon;
+            const opponentUrl = clubData.url;
 
-                    if (m.club_score !== undefined && m.opponent_score !== undefined) {
-                      if (m.club_score > m.opponent_score) {
-                        resultClass = 'result-win';
-                        resultText = 'WIN';
-                      } else if (m.club_score < m.opponent_score) {
-                        resultClass = 'result-loss';
-                        resultText = 'LOSS';
-                      }
-                    }
+            const result = (m.result || 'draw').toLowerCase();
+            let resultClass = 'result-draw';
+            let resultText = 'DRAW';
 
-                    eventList.innerHTML += `
-                      <a href="${webUrl}" target="_blank" class="event-box">
-                        <div class="date-badge">
-                          <span class="date-month">${month}</span>
-                          <span class="date-day">${day}</span>
-                        </div>
-                        <div class="info-container">
-                          <span class="club-name">${clubName}</span>
-                          <span class="opponent-name">vs ${opponent}</span>
-                        </div>
-                        <span class="result-badge ${resultClass}">${resultText}</span>
-                      </a>
-                    `;
-                  });
+            if (result === 'win') {
+              resultClass = 'result-win';
+              resultText = 'WIN';
+            } else if (result === 'loss') {
+              resultClass = 'result-loss';
+              resultText = 'LOSS';
+            }
+
+            const avatarHtml = opponentIcon
+              ? `<img class="opponent-avatar" src="${opponentIcon}" alt="${opponentName} club avatar" loading="lazy">`
+              : `<div class="avatar-placeholder">${getInitials(opponentName)}</div>`;
+
+            eventList.innerHTML += `
+              <a href="${webUrl}" target="_blank" rel="noopener noreferrer" class="event-box" aria-label="View match against ${opponentName}">
+                <div class="event-info">
+                  <span class="event-name">${m.name || 'Club Match'}</span>
+                  <span class="opponent-label">
+                    <span>vs ${opponentName}</span>
+                  </span>
+                </div>
+                <span class="opponent-avatar-link" aria-hidden="true">
+                  ${avatarHtml}
+                  <span class="result-badge ${resultClass}">${resultText}</span>
+                </span>
+              </a>
+            `;
+          }
         } catch (e) {
           console.error(e);
           eventList.innerHTML = '<div class="loading-text">Failed to load events</div>';
