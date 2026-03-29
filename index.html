@@ -163,7 +163,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, rgba(54, 160, 235, 1), rgba(54, 160, 235, 0.7));
+      background: linear-gradient(135deg, #d93020, #e85535);
       color: #fff;
       font-size: 16px;
       font-weight: 800;
@@ -204,7 +204,7 @@
       align-items: center;
       margin-top: 10px;
       padding-top: 8px;
-      border-top: 1px dashed rgba(54, 160, 235, 0.3);
+      border-top: 1px dashed #f5c5b8;
     }
     .participants-info {
       display: flex;
@@ -214,7 +214,10 @@
       font-size: 10px;
       font-weight: 600;
     }
-    .participants-icon { width: 14px; height: 14px; }
+    .participants-icon {
+      width: 14px;
+      height: 14px;
+    }
     .status-badge {
       padding: 3px 8px;
       border-radius: 10px;
@@ -222,14 +225,38 @@
       font-weight: 800;
       color: #fff;
     }
-    .status-live { background: linear-gradient(135deg, #22c55e, #16a34a); }
-    .status-upcoming { background: linear-gradient(135deg, rgba(54, 160, 235, 1), rgba(54, 160, 235, 0.8)); }
-    .status-finished { background: linear-gradient(135deg, #6b7280, #4b5563); }
-    .result-win { background: linear-gradient(135deg, #22c55e, #16a34a); }
-    .result-loss { background: linear-gradient(135deg, #ef4444, #dc2626); }
-    .result-draw { background: linear-gradient(135deg, #eab308, #ca8a04); }
-    .loading-text { color: rgba(54, 160, 235, 1); font-size: 12px; font-weight: 700; text-align: center; padding: 20px 0; }
-    .empty-text { color: rgba(54, 160, 235, 0.5); font-size: 12px; font-weight: 700; text-align: center; padding: 20px 0; }
+    .status-live {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+    .status-upcoming {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+    }
+    .status-finished {
+      background: linear-gradient(135deg, #6b7280, #4b5563);
+    }
+    .result-win {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+    }
+    .result-loss {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+    }
+    .result-draw {
+      background: linear-gradient(135deg, #eab308, #ca8a04);
+    }
+    .loading-text {
+      color: rgba(54, 160, 235, 1);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      padding: 20px 0;
+    }
+    .empty-text {
+      color: rgba(54, 160, 235, 0.5);
+      font-size: 12px;
+      font-weight: 700;
+      text-align: center;
+      padding: 20px 0;
+    }
     .last-updated { font-size: 9px; color: rgba(54, 160, 235, 1); text-align: center; margin-top: 8px; opacity: 0.7; }
 
     @media (prefers-color-scheme: dark) {
@@ -277,7 +304,9 @@
       <div class="live-dot"></div>
     </div>
     <div class="events-card">
-      <div id="eventList"><div class="loading-text">Loading events...</div></div>
+      <div id="eventList">
+        <div class="loading-text">Loading events...</div>
+      </div>
     </div>
     <div class="last-updated" id="lastUpdated"></div>
   </div>
@@ -296,10 +325,14 @@
 
       let previousEventIds = new Set();
       let previousInProgressIds = new Set();
+      let finishedEventIds = new Set();
 
       function capitalizeName(str) {
         if (!str) return "";
-        return str.replace(/-/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+        return str.replace(/-/g, ' ')
+                  .split(' ')
+                  .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                  .join(' ');
       }
 
       function getInitials(name) {
@@ -308,7 +341,8 @@
 
       function formatDate(timestamp) {
         const date = new Date(timestamp * 1000);
-        return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+        const options = { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true };
+        return date.toLocaleString('en-US', options);
       }
 
       function formatTime(date) {
@@ -325,13 +359,19 @@
       async function fetchClubData(clubUrl) {
         const slug = clubUrl.split('/').pop();
         if (clubCache[slug]) return clubCache[slug];
+
         try {
           const r = await fetch(clubUrl);
           if (!r.ok) throw new Error('Failed to fetch club');
           const data = await r.json();
-          clubCache[slug] = { name: data.name, icon: data.icon || null, url: data.url };
+          clubCache[slug] = {
+            name: data.name,
+            icon: data.icon || null,
+            url: data.url
+          };
           return clubCache[slug];
         } catch (e) {
+          console.error(e);
           return { name: capitalizeName(slug), icon: null, url: clubUrl };
         }
       }
@@ -342,23 +382,33 @@
           if (!r.ok) throw new Error('Failed to fetch match');
           return await r.json();
         } catch (e) {
+          console.error(e);
           return null;
         }
       }
 
       function detectEventChanges(currentEvents, currentInProgress) {
-        const changes = { newlyFinished: [], newEvents: [] };
+        const changes = {
+          newlyFinished: [],
+          newEvents: [],
+          removedEvents: []
+        };
+
+        const currentIds = new Set(currentEvents.map(e => e['@id']));
         const currentInProgressIds = new Set(currentInProgress.map(e => e['@id']));
+
         currentInProgress.forEach(e => {
           if (!previousInProgressIds.has(e['@id']) && !previousEventIds.has(e['@id'])) {
             changes.newEvents.push(e);
           }
         });
+
         previousInProgressIds.forEach(id => {
-          if (!currentInProgressIds.has(id)) {
+          if (!currentInProgressIds.has(id) && currentIds.has(id)) {
             changes.newlyFinished.push(id);
           }
         });
+
         return changes;
       }
 
@@ -377,12 +427,6 @@
           const finished = d.finished || [];
           const allEvents = [...inProgress, ...registered, ...finished];
 
-          if (allEvents.length === 0) {
-            eventList.innerHTML = '<div class="empty-text">No events found</div>';
-            lastUpdatedEl.textContent = 'Updated: ' + formatTime(new Date());
-            return;
-          }
-
           const changes = isInitialLoad ? null : detectEventChanges(allEvents, inProgress);
 
           let eventsToShow = [];
@@ -390,9 +434,20 @@
           const pastEvents = [...finished].reverse();
 
           if (currentEvents.length > 0) {
-            eventsToShow = currentEvents.slice(0, maxEvents);
+            const neededSlots = maxEvents - currentEvents.length;
+            if (neededSlots > 0 && pastEvents.length > 0) {
+              eventsToShow = [...currentEvents, ...pastEvents.slice(0, Math.min(neededSlots, 3))];
+            } else {
+              eventsToShow = currentEvents.slice(0, maxEvents);
+            }
           } else {
             eventsToShow = pastEvents.slice(0, 3);
+          }
+
+          if (allEvents.length === 0 || eventsToShow.length === 0) {
+            eventList.innerHTML = '<div class="empty-text">No events found</div>';
+            lastUpdatedEl.textContent = 'Updated: ' + formatTime(new Date());
+            return;
           }
 
           eventList.innerHTML = '';
@@ -411,8 +466,10 @@
             const matchUrl = m.url || 'https://www.chess.com/club/matches/' + matchId;
             const dateStr = formatDate(m.start_time);
 
-            let ourScore = 0, theirScore = 0, participants = 0;
+            let ourScore = 0, theirScore = 0;
+            let participants = 0;
             let isWin = false, isLoss = false, isDraw = false;
+            let ourColor = null;
 
             if (matchData && matchData.teams) {
               const team1 = matchData.teams.team1;
@@ -437,8 +494,96 @@
               else isDraw = true;
             }
 
-            const ourAvatarHtml = ourClubIcon
-              ? `<img src="${ourClubIcon}" alt="${clubName} avatar" loading="lazy">`
-              : `<div class="avatar-placeholder">${getInitials(clubName)}</div>`;
+            const avatarHtml = opponentIcon
+              ? `<img src="${opponentIcon}" alt="${opponentName} avatar" loading="lazy">`
+              : `<div class="avatar-placeholder">${getInitials(opponentName)}</div>`;
 
-            const opponentAvatar
+            let statusClass = 'status-upcoming';
+            let statusText = 'UPCOMING';
+            let eventClass = '';
+
+            if (isLive) {
+              statusClass = 'status-live';
+              statusText = 'LIVE';
+            } else if (isFinished) {
+              statusClass = 'status-finished';
+              statusText = 'FINISHED';
+              eventClass = 'just-finished';
+            }
+
+            if (isNewlyFinished) {
+              eventClass = 'finished-anim';
+            }
+
+            const resultBadge = getResultBadge(m.result, isWin, isLoss, isDraw);
+
+            eventList.innerHTML += `
+              <a href="${matchUrl}" target="_blank" rel="noopener noreferrer" class="event-box ${eventClass}" aria-label="View ${m.name || 'match'} against ${opponentName}">
+                <div class="event-header">
+                  <span class="event-name">${m.name || 'Club Match'}</span>
+                  <span class="event-date">${dateStr}</span>
+                </div>
+                <div class="event-main">
+                  <div class="club-section">
+                    <a href="${ourClubUrl}" target="_blank" rel="noopener noreferrer" class="club-avatar" aria-label="Visit ${clubName} club page" onclick="event.stopPropagation()">
+                      ${ourClubIcon
+                        ? `<img src="${ourClubIcon}" alt="${clubName} avatar" loading="lazy">`
+                        : `<div class="avatar-placeholder">${getInitials(clubName)}</div>`}
+                    </a>
+                    <span class="club-name you">${clubName}</span>
+                  </div>
+                  <div class="vs-section">
+                    <span class="vs-text">VS</span>
+                    <div class="score-display">
+                      <span class="score-num">${ourScore}</span>
+                      <span class="score-divider">-</span>
+                      <span class="score-num">${theirScore}</span>
+                    </div>
+                    ${resultBadge}
+                  </div>
+                  <div class="club-section">
+                    <a href="${opponentUrl}" target="_blank" rel="noopener noreferrer" class="club-avatar" aria-label="Visit ${opponentName} club page" onclick="event.stopPropagation()">
+                      ${avatarHtml}
+                    </a>
+                    <span class="club-name">${opponentName}</span>
+                  </div>
+                </div>
+                <div class="event-footer">
+                  <div class="participants-info">
+                    <svg class="participants-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>${participants || m.boards || 0} Players</span>
+                  </div>
+                  <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+              </a>
+            `;
+          }
+
+          previousEventIds = new Set(allEvents.map(e => e['@id']));
+          previousInProgressIds = new Set(inProgress.map(e => e['@id']));
+
+          finished.forEach(f => finishedEventIds.add(f['@id']));
+
+          lastUpdatedEl.textContent = 'Updated: ' + formatTime(new Date());
+
+        } catch (e) {
+          console.error(e);
+          eventList.innerHTML = '<div class="loading-text">Failed to load events</div>';
+        }
+      }
+
+      loadMatches(true);
+
+      setInterval(() => {
+        loadMatches(false);
+      }, POLL_INTERVAL);
+
+    })();
+  </script>
+</body>
+</html>
