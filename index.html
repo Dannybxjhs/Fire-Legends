@@ -9,8 +9,264 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
   <style>
-    /* Full styling with responsive design, dark mode support */
-    /* ... (see file for complete CSS) ... */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Nunito', sans-serif;
+      background: #fff5f0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 12px;
+    }
+    .events-wrapper {
+      width: 100%;
+      max-width: 380px;
+      background: #fff5f0;
+      border-radius: 18px;
+      padding: 12px;
+    }
+    .sec-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Fredoka One', cursive;
+      font-size: 14px;
+      color: #c73520;
+      margin-bottom: 8px;
+    }
+    .sec-label .dot {
+      width: 12px;
+      height: 10px;
+      border-radius: 50%;
+      background: #d93020;
+      flex-shrink: 0;
+    }
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #22c55e;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.9); }
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; transform: scale(1); }
+      to { opacity: 0.5; transform: scale(0.95); }
+    }
+    @keyframes newEvent {
+      0% { background: rgba(34, 197, 94, 0.3); }
+      100% { background: #fff8f5; }
+    }
+    .events-card {
+      background: #fff;
+      border-radius: 18px;
+      border: 2px solid #f5c5b8;
+      padding: 14px;
+      box-shadow: 0 4px 0 #e8aa98;
+    }
+    .event-box {
+      display: flex;
+      flex-direction: column;
+      background: #fff8f5;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+      border: 2px solid #f5c5b8;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      color: inherit;
+      animation: slideIn 0.3s ease-out;
+    }
+    .event-box:last-child { margin-bottom: 0; }
+    .event-box:hover {
+      background: #fce8e0;
+      border-color: #d93020;
+      transform: translateY(-2px);
+      box-shadow: 0 5px 0 #d93020;
+    }
+    .event-box.finished-anim {
+      animation: fadeOut 0.5s ease-out forwards, newEvent 1s ease-out;
+    }
+    .event-box.just-finished {
+      border-color: #6b7280;
+      background: #f5f5f5;
+    }
+    .event-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .event-name {
+      color: #c73520;
+      font-weight: 800;
+      font-size: 13px;
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .event-date {
+      color: #9a2010;
+      font-size: 10px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .event-main {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .club-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+    }
+    .club-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #f5c5b8;
+      transition: all 0.15s ease;
+      background: #f5c5b8;
+      text-decoration: none;
+      display: block;
+    }
+    .club-avatar:hover {
+      transform: scale(1.08);
+      border-color: #d93020;
+    }
+    .club-avatar:focus {
+      outline: 2px solid #d93020;
+      outline-offset: 2px;
+    }
+    .club-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .avatar-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #d93020, #e85535);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 800;
+    }
+    .club-name {
+      color: #c73520;
+      font-size: 10px;
+      font-weight: 700;
+      margin-top: 4px;
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 70px;
+    }
+    .club-name.you { color: #22c55e; }
+    .vs-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 0 4px;
+    }
+    .vs-text { color: #d93020; font-size: 11px; font-weight: 800; }
+    .score-display {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #fff5f0;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .score-num { font-size: 16px; font-weight: 800; color: #c73520; }
+    .score-divider { color: #d93020; font-size: 10px; }
+    .event-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px dashed #f5c5b8;
+    }
+    .participants-info {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #9a2010;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    .participants-icon { width: 14px; height: 14px; }
+    .status-badge {
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 9px;
+      font-weight: 800;
+      color: #fff;
+    }
+    .status-live { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .status-upcoming { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+    .status-finished { background: linear-gradient(135deg, #6b7280, #4b5563); }
+    .result-win { background: linear-gradient(135deg, #22c55e, #16a34a); }
+    .result-loss { background: linear-gradient(135deg, #ef4444, #dc2626); }
+    .result-draw { background: linear-gradient(135deg, #eab308, #ca8a04); }
+    .loading-text { color: #9a2010; font-size: 12px; font-weight: 700; text-align: center; padding: 20px 0; }
+    .empty-text { color: #e8aa98; font-size: 12px; font-weight: 700; text-align: center; padding: 20px 0; }
+    .last-updated { font-size: 9px; color: #d93020; text-align: center; margin-top: 8px; opacity: 0.7; }
+
+    @media (prefers-color-scheme: dark) {
+      body { background: #1a1a1a; }
+      .events-wrapper { background: #252525; }
+      .events-card { background: #2d2d2d; border-color: #4a4a4a; }
+      .sec-label { color: #ff8a80; }
+      .event-box { background: #2d2d2d; border-color: #4a4a4a; }
+      .event-box.just-finished { background: #3d3d3d; border-color: #6b7280; }
+      .event-box:hover { background: #3d3d3d; border-color: #e8553a; box-shadow: 0 5px 0 #e8553a; }
+      .club-avatar:hover { border-color: #e8553a; }
+      .club-avatar:focus { outline-color: #e8553a; }
+      .club-avatar { border-color: #4a4a4a; background: #4a4a4a; }
+      .event-name { color: #ff8a80; }
+      .event-date { color: #ffab91; }
+      .club-name { color: #ff8a80; }
+      .club-name.you { color: #22c55e; }
+      .vs-text { color: #e8553a; }
+      .score-display { background: #1a1a1a; }
+      .score-num { color: #ff8a80; }
+      .score-divider { color: #e8553a; }
+      .event-footer { border-color: #4a4a4a; }
+      .participants-info { color: #ffab91; }
+      .last-updated { color: #ff8a80; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .event-box, .club-avatar, .live-dot, .event-box.finished-anim, .event-box.just-finished { transition: none; animation: none; }
+    }
+
+    @media (max-width: 340px) {
+      .event-box { padding: 10px; }
+      .event-name { font-size: 12px; }
+      .club-avatar { width: 44px; height: 44px; }
+      .club-name { font-size: 9px; max-width: 60px; }
+      .score-num { font-size: 14px; }
+    }
   </style>
 </head>
 <body>
@@ -18,23 +274,238 @@
     <div class="sec-label">
       <div class="dot"></div>
       <span>Current Events 🎯</span>
+      <div class="live-dot"></div>
     </div>
     <div class="events-card">
-      <div id="eventList">
-        <div class="loading-text">Loading events...</div>
-      </div>
+      <div id="eventList"><div class="loading-text">Loading events...</div></div>
     </div>
+    <div class="last-updated" id="lastUpdated"></div>
   </div>
 
   <script>
-    // Full implementation with:
-    // - formatDate() for "MMM DD, YYYY HH:MM AM/PM" format
-    // - fetchMatchDetails() to get participant counts & scores
-    // - getPlayerColor() to detect WHITE/BLACK playing color
-    // - Interactive avatars linking to club pages
-    // - Participant count display
-    // - Live/Upcoming status badges
-    // ... (see file for complete JS)
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const clubSlug = urlParams.get('club') || 'hot-chilli-checkmate';
+      const clubName = urlParams.get('name') || 'Your Club';
+      const maxEvents = 5;
+      const POLL_INTERVAL = 30000;
+
+      const eventList = document.getElementById('eventList');
+      const lastUpdatedEl = document.getElementById('lastUpdated');
+      const clubCache = {};
+
+      let previousEventIds = new Set();
+      let previousInProgressIds = new Set();
+      let finishedEventIds = new Set();
+
+      function capitalizeName(str) {
+        if (!str) return "";
+        return str.replace(/-/g, ' ').split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+      }
+
+      function getInitials(name) {
+        return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+      }
+
+      function formatDate(timestamp) {
+        const date = new Date(timestamp * 1000);
+        return date.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true });
+      }
+
+      function formatTime(date) {
+        return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      }
+
+      function getResultBadge(result, isWin, isLoss, isDraw) {
+        if (isWin) return '<span class="status-badge result-win">WIN</span>';
+        if (isLoss) return '<span class="status-badge result-loss">LOSS</span>';
+        if (isDraw) return '<span class="status-badge result-draw">DRAW</span>';
+        return '';
+      }
+
+      async function fetchClubData(clubUrl) {
+        const slug = clubUrl.split('/').pop();
+        if (clubCache[slug]) return clubCache[slug];
+        try {
+          const r = await fetch(clubUrl);
+          if (!r.ok) throw new Error('Failed to fetch club');
+          const data = await r.json();
+          clubCache[slug] = { name: data.name, icon: data.icon || null, url: data.url };
+          return clubCache[slug];
+        } catch (e) {
+          return { name: capitalizeName(slug), icon: null, url: clubUrl };
+        }
+      }
+
+      async function fetchMatchDetails(matchId) {
+        try {
+          const r = await fetch('https://api.chess.com/pub/match/' + matchId);
+          if (!r.ok) throw new Error('Failed to fetch match');
+          return await r.json();
+        } catch (e) {
+          return null;
+        }
+      }
+
+      function detectEventChanges(currentEvents, currentInProgress) {
+        const changes = { newlyFinished: [], newEvents: [], removedEvents: [] };
+        const currentInProgressIds = new Set(currentInProgress.map(e => e['@id']));
+
+        currentInProgress.forEach(e => {
+          if (!previousInProgressIds.has(e['@id']) && !previousEventIds.has(e['@id'])) {
+            changes.newEvents.push(e);
+          }
+        });
+
+        previousInProgressIds.forEach(id => {
+          if (!currentInProgressIds.has(id)) {
+            changes.newlyFinished.push(id);
+          }
+        });
+
+        return changes;
+      }
+
+      async function loadMatches(isInitialLoad = false) {
+        try {
+          const r = await fetch('https://api.chess.com/pub/club/' + clubSlug + '/matches');
+          if (!r.ok) throw new Error('Failed to load');
+          const d = await r.json();
+
+          const inProgress = d.in_progress || [];
+          const registered = d.registered || [];
+          const finished = d.finished || [];
+          const allEvents = [...inProgress, ...registered, ...finished];
+
+          if (allEvents.length === 0) {
+            eventList.innerHTML = '<div class="empty-text">No events found</div>';
+            lastUpdatedEl.textContent = 'Last updated: ' + formatTime(new Date());
+            return;
+          }
+
+          const changes = isInitialLoad ? null : detectEventChanges(allEvents, inProgress);
+          allEvents.sort((a, b) => a.start_time - b.start_time);
+          const eventsToShow = allEvents.slice(0, maxEvents);
+
+          eventList.innerHTML = '';
+
+          for (const m of eventsToShow) {
+            const matchId = m['@id'].split('/').pop();
+            const matchData = await fetchMatchDetails(matchId);
+            const clubData = await fetchClubData(m.opponent);
+
+            const opponentName = clubData.name;
+            const opponentIcon = clubData.icon;
+            const opponentUrl = clubData.url;
+            const isLive = inProgress.some(ip => ip['@id'] === m['@id']);
+            const isFinished = finished.some(f => f['@id'] === m['@id']);
+            const isNewlyFinished = changes && changes.newlyFinished.includes(m['@id']);
+            const matchUrl = m.url || 'https://www.chess.com/club/matches/' + matchId;
+            const dateStr = formatDate(m.start_time);
+
+            let ourScore = 0, theirScore = 0, participants = 0;
+            let isWin = false, isLoss = false, isDraw = false;
+
+            if (matchData && matchData.teams) {
+              const team1 = matchData.teams.team1;
+              const team2 = matchData.teams.team2;
+              const isTeam1Ours = team1['@id'].includes(clubSlug);
+
+              if (isTeam1Ours) {
+                ourScore = team1.score || 0;
+                theirScore = team2.score || 0;
+                participants = (team1.players || []).length;
+              } else {
+                ourScore = team2.score || 0;
+                theirScore = team1.score || 0;
+                participants = (team2.players || []).length;
+              }
+            }
+
+            if (isFinished && m.result) {
+              const result = m.result.toLowerCase();
+              if (result === 'win') isWin = true;
+              else if (result === 'loss') isLoss = true;
+              else isDraw = true;
+            }
+
+            const avatarHtml = opponentIcon
+              ? `<img src="${opponentIcon}" alt="${opponentName} avatar" loading="lazy">`
+              : `<div class="avatar-placeholder">${getInitials(opponentName)}</div>`;
+
+            let statusClass = 'status-upcoming', statusText = 'UPCOMING', eventClass = '';
+
+            if (isLive) {
+              statusClass = 'status-live';
+              statusText = 'LIVE';
+            } else if (isFinished) {
+              statusClass = 'status-finished';
+              statusText = 'FINISHED';
+              eventClass = 'just-finished';
+            }
+
+            if (isNewlyFinished) eventClass = 'finished-anim';
+
+            const resultBadge = getResultBadge(m.result, isWin, isLoss, isDraw);
+
+            eventList.innerHTML += `
+              <a href="${matchUrl}" target="_blank" rel="noopener noreferrer" class="event-box ${eventClass}" aria-label="View ${m.name || 'match'} against ${opponentName}">
+                <div class="event-header">
+                  <span class="event-name">${m.name || 'Club Match'}</span>
+                  <span class="event-date">${dateStr}</span>
+                </div>
+                <div class="event-main">
+                  <div class="club-section">
+                    <a href="https://www.chess.com/club/${clubSlug}" target="_blank" rel="noopener noreferrer" class="club-avatar" aria-label="Visit ${clubName} club page" onclick="event.stopPropagation()">
+                      <div class="avatar-placeholder">${getInitials(clubName)}</div>
+                    </a>
+                    <span class="club-name you">${clubName}</span>
+                  </div>
+                  <div class="vs-section">
+                    <span class="vs-text">VS</span>
+                    <div class="score-display">
+                      <span class="score-num">${ourScore}</span>
+                      <span class="score-divider">-</span>
+                      <span class="score-num">${theirScore}</span>
+                    </div>
+                    ${resultBadge}
+                  </div>
+                  <div class="club-section">
+                    <a href="${opponentUrl}" target="_blank" rel="noopener noreferrer" class="club-avatar" aria-label="Visit ${opponentName} club page" onclick="event.stopPropagation()">
+                      ${avatarHtml}
+                    </a>
+                    <span class="club-name">${opponentName}</span>
+                  </div>
+                </div>
+                <div class="event-footer">
+                  <div class="participants-info">
+                    <svg class="participants-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                      <circle cx="9" cy="7" r="4"></circle>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                    <span>${participants || m.boards || 0} Players</span>
+                  </div>
+                  <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+              </a>
+            `;
+          }
+
+          previousEventIds = new Set(allEvents.map(e => e['@id']));
+          previousInProgressIds = new Set(inProgress.map(e => e['@id']));
+          finished.forEach(f => finishedEventIds.add(f['@id']));
+          lastUpdatedEl.textContent = 'Updated: ' + formatTime(new Date());
+
+        } catch (e) {
+          eventList.innerHTML = '<div class="loading-text">Failed to load events</div>';
+        }
+      }
+
+      loadMatches(true);
+      setInterval(() => loadMatches(false), POLL_INTERVAL);
+    })();
   </script>
 </body>
 </html>
